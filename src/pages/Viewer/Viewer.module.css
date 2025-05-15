@@ -1,0 +1,224 @@
+.container {
+  background-color: #F5F5F5;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: row; /* Mudança aqui: agora os elementos são lado a lado */
+  height: calc(100vh - 60px); /* Ocupa toda a altura disponível */
+  width: 100%;
+  position: relative;
+}
+
+
+.title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #1A3E6E;
+}
+
+
+.fileInput {
+  display: none;
+}
+
+.fileInput:hover{
+  background-color: rgba(6, 92, 206, 0.99)
+}
+
+.customFileLabel {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #1A3E6E;
+  color: #F5F5F5;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.customFileLabel:hover{
+  background-color: rgba(6, 92, 206, 0.99)
+}
+
+/* Botão geral */
+.button {
+  margin: 0 10px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: #1A3E6E;
+  color: #F5F5F5;
+  font-size: 16px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+
+.button:hover{
+  background-color: rgba(6, 92, 206, 0.99)
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  background-color: rgba(6, 92, 206, 0.5)
+}
+
+.fileList {
+  margin-top: 20px;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.fileName {
+  flex-grow: 1;
+  margin-right: 20px;
+  font-weight: bold;
+  color: #1A3E6E;
+}
+
+.containerOptions {
+  width: 500px; /* Largura fixa para o painel lateral */
+  background-color: white;
+  border-right: 1px solid #ddd;
+  padding: 15px;
+  overflow-y: auto; /* Permite rolagem quando o conteúdo é muito grande */
+  transition: transform 0.3s ease; /* Animação suave ao abrir/fechar */
+  position: absolute; /* Posicionamento absoluto para sobrepor */
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+
+.containerOptions.closed {
+  transform: translateX(-100%); /* Move para fora da tela quando fechado */
+}
+
+.toggleButton {
+  position: absolute;
+  top: 10px;
+  left: 530px; /* Posição quando o menu está aberto */
+  background-color: #1A3E6E;
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  z-index: 15; /* Valor maior que o z-index do containerOptions */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: left 0.3s ease; /* Anima junto com o containerOptions */
+}
+
+.toggleButton:hover{
+  background-color: rgba(6, 92, 206, 0.5)
+
+}
+
+/* Quando o menu está fechado, o botão se move */
+.menuClosed .toggleButton {
+  left: 0;
+}
+.ifcContainer {
+  flex: 1;
+  height: 100%;
+  min-height: calc(100vh - 60px);
+}
+
+.containerBtns{
+  display: flex;
+}
+
+
+/* Media queries para telas menores */
+@media (max-width: 768px) {
+  /* Ajustes para tablet */
+  .containerOptions {
+    width: 350px; /* Reduz a largura do painel em tablets */
+  }
+  
+  .toggleButton {
+    left: 380px; /* Ajusta a posição do botão */
+  }
+  
+  .button {
+    margin: 0 5px;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  
+  .fileItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .fileItem .button, 
+  .fileItem a.button {
+    margin-top: 8px;
+    width: 200px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Ajustes para smartphone */
+  .containerOptions {
+    width: 280px; /* Reduz mais a largura em celulares */
+  }
+  
+  .toggleButton {
+    left: 310px;
+    width: 35px;
+    height: 35px;
+  }
+  
+  .containerBtns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .containerBtns .button,
+  .customFileLabel {
+    width: 100%;
+    margin: 5px 0;
+    padding: 10px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  
+  .fileItem {
+    padding: 8px;
+  
+  }
+  
+  .fileName {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+}
+
+/* Para quando a tela é muito pequena horizontalmente */
+@media (max-height: 500px) {
+  .fileItem {
+    padding: 5px;
+    margin-bottom: 5px;
+  }
+  
+  .button, .customFileLabel {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+}

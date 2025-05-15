@@ -1,0 +1,27 @@
+.container {
+  display: flex;
+  border: 2px solid #c06018;
+  flex-direction: column;
+  width: 100%;
+}
+
+.title {
+  color: #c06018;
+  text-shadow: 2px 2px 4px #ffddcc;
+  margin-top: 30px;
+}
+
+
+.customfileUpload {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #c06018;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.customfileUpload:hover {
+  outline: #ffddcc;
+}
