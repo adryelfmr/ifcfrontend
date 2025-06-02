@@ -69,55 +69,56 @@ const Viewer: React.FunctionComponent = () => {
   }, []);
 
   const ifcLoader = async (file: string) => {
-    await fragmentIfcLoader.setup();
-  const response = await fetch(file);
-  const data = await response.arrayBuffer();
-  const buffer = new Uint8Array(data);
-  const newModel = await fragmentIfcLoader.load(buffer);
-  newModel.name = 'example';
-
-  // Remove o modelo anterior, se existir
-  if (model && world) {
-    world.scene.three.remove(model);
-  }
-
-  setModel(newModel);
-  world.scene.three.add(newModel);
-    dimensions.world = world;
-    dimensions.enabled = true;
-    dimensions.snapDistance = 1;
-    volumeMeasurements.world = world;
-    volumeMeasurements.enabled = true;
-
-    console.log(world);
-    highlighter.setup({ world });
-    highlighter.zoomToSelection = true;
-
-    outliner.world = world;
-    outliner.enabled = true;
-
-    outliner.create(
-      'example',
-      new THREE.MeshBasicMaterial({
-        color: 0xbcf124,
-        transparent: true,
-        opacity: 0.5,
-      }),
-    );
-    // highlighter.events.select.onHighlight.add((event) => {
-    //   dimensions;
-    // });
-
-    highlighter.events.select.onClear.add(() => {
-      // dimensions.clear();
-    });
-    highlighter.events.select.onHighlight.add(function (data) {
-      outliner.clear('example');
-      outliner.add('example', data);
-    });
-    highlighter.events.select.onClear.add(function () {
-      outliner.clear('example');
-    });
+    try {
+      // Primeiro, configure o mundo para o outliner
+      outliner.world = world;
+      outliner.enabled = true;
+  
+      // Agora é seguro limpar o outliner
+      outliner.clear(file);
+      
+      await fragmentIfcLoader.setup();
+      const response = await fetch(file);
+      const data = await response.arrayBuffer();
+      const buffer = new Uint8Array(data);
+      
+      const newModel = await fragmentIfcLoader.load(buffer);
+      newModel.name = file;
+  
+      // Remove o modelo anterior, se existir
+      if (model && world) {
+        world.scene.three.remove(model);
+      }
+  
+      setModel(newModel);
+      world.scene.three.add(newModel);
+      
+      // Configurar outras ferramentas de visualização
+      dimensions.world = world;
+      dimensions.enabled = true;
+      dimensions.snapDistance = 1;
+      
+      volumeMeasurements.world = world;
+      volumeMeasurements.enabled = true;
+  
+      highlighter.setup({ world });
+      highlighter.zoomToSelection = true;
+  
+      // Criar o outliner com um nome único para evitar conflitos
+      const uniqueName = file + "_" + Date.now();
+      outliner.create(
+        uniqueName,
+        new THREE.MeshBasicMaterial({
+          color: 0xbcf124,
+          transparent: true,
+          opacity: 0.5,
+        }),
+      );
+  
+      // ...restante do código
+    } catch (error) {
+      console.error("Erro ao carregar arquivo IFC:", error);
+    }
   };
 
   useEffect(() => {
