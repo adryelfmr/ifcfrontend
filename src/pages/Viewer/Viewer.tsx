@@ -114,12 +114,25 @@ const Viewer: React.FunctionComponent = () => {
           opacity: 0.5,
         }),
       );
-  
-      // ...restante do código
+      // highlighter.events.select.onHighlight.add((event) => {
+    //   dimensions;
+    // });
+
+    highlighter.events.select.onClear.add(() => {
+      // dimensions.clear();
+    });
+    highlighter.events.select.onHighlight.add(function (data) {
+      outliner.clear(uniqueName);
+      outliner.add(uniqueName, data);
+    });
+    highlighter.events.select.onClear.add(function () {
+      outliner.clear(uniqueName);
+    });
     } catch (error) {
       console.error("Erro ao carregar arquivo IFC:", error);
     }
   };
+
 
   useEffect(() => {
     async function getAllFiles() {
