@@ -70,12 +70,32 @@ const Viewer: React.FunctionComponent = () => {
 
   const ifcLoader = async (file: string) => {
     try {
+
+      highlighter.clear();
       // Primeiro, configure o mundo para o outliner
       outliner.world = world;
       outliner.enabled = true;
   
       // Agora é seguro limpar o outliner
-      outliner.clear(file);
+      outliner.dispose();
+      
+      if (model) {
+        // Remover modelo da cena
+        world.scene.three.remove(model);
+        
+        // Desabilitar interações com o modelo anterior
+        if (model.geometry) model.geometry.dispose();
+        if (model.material) {
+          if (Array.isArray(model.material)) {
+            model.material.forEach(material => material.dispose());
+          } else {
+            model.material.dispose();
+          }
+        }
+        
+        // Forçar limpeza
+        world.renderer.three.renderLists.dispose();
+      }
       
       await fragmentIfcLoader.setup();
       const response = await fetch(file);
@@ -101,9 +121,7 @@ const Viewer: React.FunctionComponent = () => {
       volumeMeasurements.world = world;
       volumeMeasurements.enabled = true;
   
-      highlighter.setup({ world });
-      highlighter.zoomToSelection = true;
-  
+      
       // Criar o outliner com um nome único para evitar conflitos
       const uniqueName = file + "_" + Date.now();
       outliner.create(
@@ -115,12 +133,12 @@ const Viewer: React.FunctionComponent = () => {
         }),
       );
       // highlighter.events.select.onHighlight.add((event) => {
-    //   dimensions;
-    // });
-
-    highlighter.events.select.onClear.add(() => {
-      // dimensions.clear();
-    });
+        //   dimensions;
+        // });
+        highlighter.setup({ world });
+        highlighter.zoomToSelection = true;
+        
+    
     highlighter.events.select.onHighlight.add(function (data) {
       outliner.clear(uniqueName);
       outliner.add(uniqueName, data);
