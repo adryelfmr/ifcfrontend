@@ -4,6 +4,7 @@ import styles from './Viewer.module.css';
 import * as THREE from 'three';
 import * as OBCF from '@thatopen/components-front';
 import * as OBC from '@thatopen/components';
+import * as FRAGS from '@thatopen/fragments';
 
 const Viewer: React.FunctionComponent = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -15,15 +16,17 @@ const Viewer: React.FunctionComponent = () => {
   const [world, setWorld] = useState<any>();
   const [model, setModel] = useState<any>();
 
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const components = new OBC.Components();
-  const worlds = components.get(OBC.Worlds);
-  const dimensions = components.get(OBCF.LengthMeasurement);
-  const volumeMeasurements = components.get(OBCF.VolumeMeasurement);
-  const fragmentIfcLoader = components.get(OBC.IfcLoader);
-  const grids = components.get(OBC.Grids);
-  const highlighter = components.get(OBCF.Highlighter);
-  const outliner = components.get(OBCF.Outliner);
+  const worlds = new OBC.Worlds(components);
+  const dimensions = new OBCF.LengthMeasurement(components)
+  const volumeMeasurements = new OBCF.VolumeMeasurement(components)
+  const fragmentIfcLoader = new OBC.IfcLoader(components)
+  const fragments = new OBC.FragmentsManager(components)
+  const grids = new OBC.Grids(components)
+  const highlighter = new OBCF.Highlighter(components)
+  const outliner = new OBCF.Outliner(components)
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -33,20 +36,17 @@ const Viewer: React.FunctionComponent = () => {
   useEffect(() => {
     async function worldRenderer() {
       if (containerRef.current) {
-        // if (world) {
-
-        // }
         const newWorld = worlds.create<OBC.SimpleScene, OBC.SimpleCamera, OBCF.PostproductionRenderer>();
 
         newWorld.scene = new OBC.SimpleScene(components);
         newWorld.renderer = new OBCF.PostproductionRenderer(components, containerRef.current);
         newWorld.camera = new OBC.SimpleCamera(components);
-
+        
         components.init();
 
-        newWorld.scene.three.background = null;
+      
         newWorld.scene.setup();
-        // newWorld.scene.config.backgroundColor = new THREE.Color(0xff0000);
+        newWorld.scene.config.backgroundColor = new THREE.Color(0x000000);
         newWorld.scene.config.directionalLight.intensity = 10;
         newWorld.scene.config.ambientLight.intensity = 10;
         newWorld.camera.controls.setLookAt(12, 6, 8, 0, 0, -10);
@@ -56,11 +56,8 @@ const Viewer: React.FunctionComponent = () => {
         grid.config.primarySize = 10;
         grid.config.secondarySize = 40;
         grid.config.visible = true;
-
-        const { postproduction } = newWorld.renderer;
-        postproduction.enabled = true;
-        postproduction.customEffects.excludedMeshes.push(grid.three);
-        const ao = postproduction.n8ao.configuration;
+        newWorld.renderer.postproduction.enabled = true;
+        newWorld.renderer.postproduction.customEffects.excludedMeshes.push(grid.three);
         setWorld(newWorld);
         console.log(newWorld);
       }
@@ -70,50 +67,33 @@ const Viewer: React.FunctionComponent = () => {
 
   const ifcLoader = async (file: string) => {
     try {
+      if (!world) {
+        console.error("Mundo (world) não está inicializado. Não é possível carregar o modelo.");
+        return; 
+      }
 
-      highlighter.clear();
-      // Primeiro, configure o mundo para o outliner
+      
       outliner.world = world;
       outliner.enabled = true;
-  
-      // Agora é seguro limpar o outliner
-      outliner.dispose();
+      highlighter.dispose()
+      outliner.dispose()
       
-      if (model) {
-        // Remover modelo da cena
+      if (model && world.scene && world.scene.three) {
         world.scene.three.remove(model);
-        
-        // Desabilitar interações com o modelo anterior
-        if (model.geometry) model.geometry.dispose();
-        if (model.material) {
-          if (Array.isArray(model.material)) {
-            model.material.forEach(material => material.dispose());
-          } else {
-            model.material.dispose();
-          }
-        }
-        
-        // Forçar limpeza
-        world.renderer.three.renderLists.dispose();
       }
-      
       await fragmentIfcLoader.setup();
+      fragmentIfcLoader.settings.webIfc.COORDINATE_TO_ORIGIN = true;
       const response = await fetch(file);
       const data = await response.arrayBuffer();
       const buffer = new Uint8Array(data);
       
       const newModel = await fragmentIfcLoader.load(buffer);
-      newModel.name = file;
-  
-      // Remove o modelo anterior, se existir
-      if (model && world) {
-        world.scene.three.remove(model);
-      }
   
       setModel(newModel);
       world.scene.three.add(newModel);
       
-      // Configurar outras ferramentas de visualização
+      
+     
       dimensions.world = world;
       dimensions.enabled = true;
       dimensions.snapDistance = 1;
@@ -121,35 +101,83 @@ const Viewer: React.FunctionComponent = () => {
       volumeMeasurements.world = world;
       volumeMeasurements.enabled = true;
   
-      
-      // Criar o outliner com um nome único para evitar conflitos
-      const uniqueName = file + "_" + Date.now();
+
+      highlighter.setup({selectionColor: new THREE.Color(0x00bfff), world, hoverColor: new THREE.Color(0x00008b)});
+      highlighter.zoomToSelection = true;
+  
+      const uniqueName = `model_${Date.now()}`;
       outliner.create(
         uniqueName,
         new THREE.MeshBasicMaterial({
-          color: 0xbcf124,
+          color: 0x00008b,
           transparent: true,
           opacity: 0.5,
         }),
       );
-      // highlighter.events.select.onHighlight.add((event) => {
-        //   dimensions;
-        // });
-        highlighter.setup({ world });
-        highlighter.zoomToSelection = true;
-        
+
+      highlighter.events.select.onHighlight.add((data) => {
+        outliner.clear(uniqueName);
+        outliner.add(uniqueName, data);
+      });
+      
+      highlighter.events.select.onClear.add(() => {
+        outliner.clear(uniqueName);
+      });
     
-    highlighter.events.select.onHighlight.add(function (data) {
-      outliner.clear(uniqueName);
-      outliner.add(uniqueName, data);
-    });
-    highlighter.events.select.onClear.add(function () {
-      outliner.clear(uniqueName);
-    });
     } catch (error) {
       console.error("Erro ao carregar arquivo IFC:", error);
     }
+    
   };
+
+  
+
+  
+
+  const exportModelAsFragment = () => {
+    try {
+      // Verifique se o modelo existe
+      if (!model) {
+        alert('Carregue um modelo antes de exportar');
+        return;
+      }
+      
+      // Crie um serializador
+      const serializer = new FRAGS.Serializer();
+      
+      // Exporte o modelo (que é um FragmentsGroup) para bytes
+      const fragmentBytes = serializer.export(model);
+      
+      // Crie um blob a partir dos bytes
+      const blob = new Blob([fragmentBytes], { type: 'application/octet-stream' });
+      
+      // Crie uma URL para o blob
+      const url = URL.createObjectURL(blob);
+      
+      // Crie um elemento de link para download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${model.name || 'modelo'}_fragmentado.frag`; // Use .frag como extensão para fragmentos
+      
+      // Adicione o link ao documento, clique nele e remova-o
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpe a URL do objeto após o download
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+    } catch (error) {
+      console.error('Erro ao exportar modelo como fragmento:', error);
+      alert('Erro ao exportar o modelo');
+    }
+  };
+//If you want to get the resulted model every time a new model is loaded, you can subscribe to the following event anywhere in your app:
+  fragments.onFragmentsLoaded.add((model) => {
+    console.log(model);
+  });
 
 
   useEffect(() => {
@@ -201,27 +229,33 @@ const Viewer: React.FunctionComponent = () => {
         </button>
       <div className={`${styles.containerOptions} ${isOpen ? '' : styles.closed}`}>
         <div className={styles.containerBtns}>
-        <label htmlFor="file-upload" className={styles.customFileLabel}>
-          Upload do Arquivo
-        </label>
-        <input id="file-upload" className={styles.fileInput} type="file" onChange={handleFileChange}></input>
-        <button className={styles.button} onClick={handleUpload} disabled={!selectedFile}>
-          Enviar Arquivo
-        </button>
-        {uploadStatus && <p>{uploadStatus}</p>}
-        <button className={`${styles.button} ${styles.buttonSecondary}`} onClick={toggleRefresh}>
-          ATUALIZAR LISTA DE MODELS
-        </button>
+          <label htmlFor="file-upload" className={styles.button}>
+            Upload do Arquivo
+          </label>
+          <input id="file-upload" className={styles.fileInput} type="file" onChange={handleFileChange}></input>
+          <button className={styles.button} onClick={handleUpload} disabled={!selectedFile}>
+            Enviar Arquivo
+          </button>
+          {uploadStatus && <p>{uploadStatus}</p>}
+          <button className={`${styles.button} ${styles.buttonSecondary}`} onClick={toggleRefresh}>
+            Atualizar
+          </button>
         </div>
         {files && (
           <div className={styles.fileList}>
             {files.map((file, index) => (
               <div key={index} className={styles.fileItem}>
-                <div className={`${styles.fileName} ${styles.filesBtn}`}>{file.original_name}</div>
+                <div className={styles.fileName}>{file.original_name}</div>
+                <div className={styles.fileActions}>
+                <button className={styles.button} onClick={() => ifcLoader(file.file_url)}>Carregar IFC</button>
+                <button className={styles.button} onClick={exportModelAsFragment}>
+                  Exportar como Fragmento
+                </button>
                 <a className={styles.button} href={file.file_url} download={file.original_name}>
                   Download
                 </a>
-                <button className={styles.button} onClick={() => ifcLoader(file.file_url)}>IfcLoader</button>
+                </div>
+                
               </div>
             ))}
           </div>

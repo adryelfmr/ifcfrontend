@@ -42,7 +42,7 @@
 
 /* Botão geral */
 .button {
-  margin: 0 10px;
+  margin: 10px 10px;
   padding: 10px 15px;
   border: none;
   border-radius: 5px;
@@ -67,10 +67,12 @@
   margin-top: 20px;
 }
 
+
 .fileItem {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 10px;
   margin-bottom: 10px;
   border: 1px solid #ddd;
@@ -78,15 +80,18 @@
   background-color: #f9f9f9;
 }
 
+.fileActions{
+  display: flex;;
+}
+
 .fileName {
   flex-grow: 1;
-  margin-right: 20px;
   font-weight: bold;
   color: #1A3E6E;
 }
 
 .containerOptions {
-  width: 500px; /* Largura fixa para o painel lateral */
+  width: 550px; /* Largura fixa para o painel lateral */
   background-color: white;
   border-right: 1px solid #ddd;
   padding: 15px;
@@ -108,7 +113,7 @@
 .toggleButton {
   position: absolute;
   top: 10px;
-  left: 530px; /* Posição quando o menu está aberto */
+  left: 580px; /* Posição quando o menu está aberto */
   background-color: #1A3E6E;
   color: white;
   border: none;
@@ -140,6 +145,25 @@
 
 .containerBtns{
   display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid #1A3E6E;
+  padding-bottom: 10px;
+}
+
+.fileActions .button,
+.fileActions a.button,
+.fileActions button ,
+.button{
+  width: 130px; 
+  display: inline-flex; 
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 45px; 
+  margin: 5px;
+  padding: 10px 5px; 
+  box-sizing: border-box; 
 }
 
 
@@ -162,13 +186,23 @@
   
   .fileItem {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
   }
   
+  .fileActions{
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
   .fileItem .button, 
   .fileItem a.button {
     margin-top: 8px;
     width: 200px;
+    text-align: center;
+  }
+
+  .fileName{
     text-align: center;
   }
 }
